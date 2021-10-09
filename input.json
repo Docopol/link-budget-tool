@@ -1,0 +1,84 @@
+{
+	"Spacecraft":{
+		"Power":{
+			"Value": 2,
+			"Unit": "SI"
+		},
+		"LossFactor":{
+			"Value": 0.8,
+			"Unit": "SI"
+		},
+		"Frequency":{
+			"Value": 2.5e9,
+			"Unit": "SI"
+		},
+		"Antenna":{
+			"type": "parabolic",
+			"diameter":{
+				"Value": 0.5,
+				"Unit": "SI"
+			},
+			"efficiency":{
+				"Value": 0.55,
+				"Unit": "SI"
+			}
+		},
+		"OffsetPointing":{
+			"Value": 0.25,
+			"Unit": "deg"
+		}	
+	},
+	"GroundStation":{
+		"Power":{
+			"Value": 2,
+			"Unit": "SI"
+		},
+		"LossFactor":{
+			"Value": 0.8,
+			"Unit": "SI"
+		},
+		"Antenna":{
+			"type": "parabolic",
+			"diameter":{
+				"Value": 10,
+				"Unit": "SI"
+			},
+			"efficiency":{
+				"Value": 0.55,
+				"Unit": "SI"
+			}
+		},
+		"OffsetPointing":{
+			"Value": 0.25,
+			"Unit": "deg"
+		}		
+	},
+	"Mission":{
+		"DownlinkTimeRatio":{
+			"Value": 0.0833,
+			"Unit": "SI"
+		},
+		"OrbitingBodyRadius":{
+			"Value": 6371e3,
+			"Unit": "SI"
+		},
+		"Orbital Height":{
+			"Value": 570e3,
+			"Unit": "SI"
+		}
+	},
+	"PayloadReq":{
+		"GeneratedDataRate":{
+			"Value": 10e6,
+			"Unit": "SI"
+		},
+		"DutyCycle":{
+			"Value": 0.5,
+			"Unit": "SI"
+		},
+		"RequiredBER":{
+			"Value": 10e-6,
+			"Unit": "SI"
+		}
+	}
+}
