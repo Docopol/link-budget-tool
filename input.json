@@ -8,19 +8,23 @@
 			"Value": 0.8,
 			"Unit": "SI"
 		},
-		"Frequency":{
-			"Value": 2.5e9,
-			"Unit": "SI"
-		},
 		"Antenna":{
-			"type": "parabolic",
-			"diameter":{
+			"Type": "parabolic",
+			"Diameter":{
 				"Value": 0.5,
 				"Unit": "SI"
 			},
-			"efficiency":{
+			"Length":{
+				"Value": 0,
+				"Unit": "SI"
+			},
+			"Efficiency":{
 				"Value": 0.55,
 				"Unit": "SI"
+			},
+			"HalfPowerAngle":{
+				"Value": 7,
+				"Unit": "deg"
 			}
 		},
 		"OffsetPointing":{
@@ -37,15 +41,24 @@
 			"Value": 0.8,
 			"Unit": "SI"
 		},
+
 		"Antenna":{
-			"type": "parabolic",
-			"diameter":{
+			"Type": "parabolic",
+			"Diameter":{
 				"Value": 10,
 				"Unit": "SI"
 			},
-			"efficiency":{
+			"Length":{
+				"Value": 0,
+				"Unit": "SI"
+			},
+			"Efficiency":{
 				"Value": 0.55,
 				"Unit": "SI"
+			},
+			"HalfPowerAngle":{
+				"Value": 7,
+				"Unit": "deg"
 			}
 		},
 		"OffsetPointing":{
@@ -54,6 +67,14 @@
 		}		
 	},
 	"Mission":{
+		"FrequencyDownlink":{
+			"Value": 2.5e9,
+			"Unit": "SI"
+		},
+		"FrequencyUplink":{
+			"Value": 2.5e9,
+			"Unit": "SI"
+		},
 		"DownlinkTimeRatio":{
 			"Value": 0.0833,
 			"Unit": "SI"

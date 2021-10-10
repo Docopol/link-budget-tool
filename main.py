@@ -11,7 +11,7 @@ co.fileConv(scData)
 
 #Inputs
 
-print(scData["Spacecraft"]["LossFactor"]["Value"])
+# print(scData["Spacecraft"]["LossFactor"]["Value"])
 
 # scPower = co.SIConv(scData["Spacecraft"]["Power"])
 # scTransLoss = co.SIConv(scData["Spacecraft"]["LossFactor"])
@@ -20,16 +20,27 @@ print(scData["Spacecraft"]["LossFactor"]["Value"])
 
 #Outputs (have to write a function in comms.py to calculate each of these values)
 
-# scGain = calcGain(scSignalFrequency, scDiameter, )
-# transmissionPathLoss = -10
-# gsGain = 100
-# freeSpaceLoss = -10
-# scAntennaPointLoss = -10
-# dataRate = 10
-# systemNoiseTemp = 10
+scPower = scData["Spacecraft"]["Power"]["Value"]
+scGain = co.calcGain(scData["Mission"]["FrequencyDownlink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["Antenna"]["Efficiency"]["Value"])
+scPointLoss = co.calcPointingLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
+scTransLoss = scData["Spacecraft"]["LossFactor"]["Value"]
+
+gsGain = co.calcGain(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
+gsPointLoss = co.calcPointingLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
+gsRecLoss = scData["GroundStation"]["LossFactor"]["Value"]
+
+systemNoiseTemp = co.calcSystemNoise(scData["Mission"]["FrequencyDownlink"]["Value"], "downlink")
+
+transmissionPathLoss = -10
 
 
-# snr = scPower + scTransmitterLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + antennaPointLoss + gsRecLoss + 228.6 - 10*np.log(dataRate) - 10*np.log(systemNoiseTemp)
-# snrReq = 10 #just for now
+freeSpaceLoss = -10
 
-# print(f'Based on the data inputed the Eb/n0 ratio is {snr} dB. The required Eb/n0 ratio is {snrReq} dB') 			#It is assumed that the SNR = Eb/nO, in other words that bitrate = bandwidth noise, don't forget the 3dB margin
+dataRate = 10
+
+
+
+snr = scPower + scTransLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + scPointLoss + gsPointLoss + gsRecLoss + 228.6 - 10*np.log(dataRate) - 10*np.log(systemNoiseTemp)
+snrReq = 10 #just for now
+
+print(f'Based on the data inputed the Eb/n0 ratio is {snr} dB. The required Eb/n0 ratio is {snrReq} dB') 			#It is assumed that the SNR = Eb/nO, in other words that bitrate = bandwidth noise, don't forget the 3dB margin

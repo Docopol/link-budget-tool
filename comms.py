@@ -26,10 +26,7 @@ def dBConv(parameter):
 	parameterIndB = 10**(parameter/10)
 	return parameterIndB
 
-
-
-
-def calcGain(frequency, diameter, efficiency=1, length=1, typeAnt="unspecified"):
+def calcGain(frequency, typeAnt, diameter, length, efficiency):
 
 	c = 3e8
 
@@ -44,7 +41,7 @@ def calcGain(frequency, diameter, efficiency=1, length=1, typeAnt="unspecified")
 
 	return gain
 
-def calcAntennaPointingLoss(frequency, diameter, pointingOffset, typeAnt="unspecified", length=None, halfPowerAngle=None):
+def calcPointingLoss(frequency, typeAnt, diameter, length, pointingOffset, halfPowerAngle):
 
 	if(typeAnt == "parabolic"):
 		halfPowerAngle = 21/180*np.pi/(frequency/1e9*diameter)
@@ -58,3 +55,34 @@ def calcAntennaPointingLoss(frequency, diameter, pointingOffset, typeAnt="unspec
 	return antennaLoss
 
 
+def calcSystemNoise(frequency, mode): #values taken from S5 p14
+	cableLossNoise = 35
+
+	if(mode == "downlink"):
+		if(frequency == 0.2e9):
+			antennaNoise = 150
+			receiverNoise = 36
+		elif(frequency > 2e9 and frequency < 12e9):
+			antennaNoise = 25
+			receiverNoise = 75
+		else:
+			antennaNoise = 100
+			receiverNoise = 289
+
+	elif(mode == "crosslink"):
+		antennaNoise = 20
+		receiverNoise = 627
+	elif(mode == "uplink"):
+		if(frequency > 0.2e9 and frequency < 20e9):
+			antennaNoise = 290
+			receiverNoise = 289
+		elif(frequency == 40e9):
+			antennaNoise = 290
+			receiverNoise = 438
+
+	totalNoise = antennaNoise+cableLossNoise+receiverNoise
+
+	return totalNoise
+
+# def calcTransPathLoss(frequency):
+	
