@@ -79,6 +79,7 @@
 		"RequiredBER":{
 			"Value": 10e-6,
 			"Unit": "SI"
-		}
+		},
+		"Coding":"none"
 	}
 }

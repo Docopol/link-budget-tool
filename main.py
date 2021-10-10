@@ -7,22 +7,26 @@ import comms as co
 with open("input.json", "r") as inputFile:
 	scData = json.load(inputFile)
 
+co.fileConv(scData)
+
 #Inputs
 
-scPower = co.SIConv(scData["Spacecraft"]["Power"])
-scTransLoss = co.SIConv(scData["Spacecraft"]["LossFactor"])
-gsRecLoss = co.SIConv(scData["GroundStation"]["LossFactor"])
-scSignalFrequency = co.SIConv(scData["Spacecraft"]["Frequency"])
+print(scData["Spacecraft"]["LossFactor"]["Value"])
+
+# scPower = co.SIConv(scData["Spacecraft"]["Power"])
+# scTransLoss = co.SIConv(scData["Spacecraft"]["LossFactor"])
+# gsRecLoss = co.SIConv(scData["GroundStation"]["LossFactor"])
+# scSignalFrequency = co.SIConv(scData["Spacecraft"]["Frequency"])
 
 #Outputs (have to write a function in comms.py to calculate each of these values)
 
-scGain = 10
-transmissionPathLoss = -10
-gsGain = 100
-freeSpaceLoss = -10
-scAntennaPointLoss = -10
-dataRate = 10
-systemNoiseTemp = 10
+# scGain = calcGain(scSignalFrequency, scDiameter, )
+# transmissionPathLoss = -10
+# gsGain = 100
+# freeSpaceLoss = -10
+# scAntennaPointLoss = -10
+# dataRate = 10
+# systemNoiseTemp = 10
 
 
 # snr = scPower + scTransmitterLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + antennaPointLoss + gsRecLoss + 228.6 - 10*np.log(dataRate) - 10*np.log(systemNoiseTemp)
