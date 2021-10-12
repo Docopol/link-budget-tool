@@ -23,7 +23,7 @@
 				"Unit": "SI"
 			},
 			"HalfPowerAngle":{
-				"Value": 7,
+				"Value": 0,
 				"Unit": "deg"
 			}
 		},
@@ -62,11 +62,12 @@
 			}
 		},
 		"OffsetPointing":{
-			"Value": 0.25,
-			"Unit": "deg"
+			"Value": 0.0014,
+			"Unit": "SI"
 		}		
 	},
 	"Mission":{
+		"Planet":"Earth",
 		"FrequencyDownlink":{
 			"Value": 2.5e9,
 			"Unit": "SI"
@@ -83,22 +84,55 @@
 			"Value": 6371e3,
 			"Unit": "SI"
 		},
-		"Orbital Height":{
+		"OrbitalHeight":{
 			"Value": 570e3,
+			"Unit": "SI"
+		},
+		"SpacecraftSunDistance":{
+			"Value": 0,
+			"Unit": "SI"
+		},
+		"ElongationAngle":{
+			"Value": 0,
+			"Unit": "deg"
+		},
+		"GroundVelocity":
+		{
+			"Value": 0,
 			"Unit": "SI"
 		}
 	},
-	"PayloadReq":{
-		"GeneratedDataRate":{
-			"Value": 10e6,
-			"Unit": "SI"
-		},
-		"DutyCycle":{
-			"Value": 0.5,
-			"Unit": "SI"
-		},
+	"Payload":{
+		"LineImager":{
+			"GeneratedDataRate":{
+				"Value": 1e6,
+				"Unit": "SI"
+			},
+			"DutyCycle":{
+				"Value": 0.5,
+				"Unit": "SI"
+			},
+			"SwathWidth":{
+				"Value": 0.5,
+				"Unit": "SI"
+			},
+			"PixelSize":{
+				"Value": 0.5,
+				"Unit": "SI"
+			},
+			"BitsPerPixel":{
+				"Value": 0.5,
+				"Unit": "SI"
+			}	
+		}	
+	},
+	"PayloadRequirements":{
 		"RequiredBER":{
 			"Value": 10e-6,
+			"Unit": "SI"
+		},
+		"RequiredE/B":{
+			"Value": 10,
 			"Unit": "SI"
 		},
 		"Coding":"none"

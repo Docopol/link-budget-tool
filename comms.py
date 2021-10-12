@@ -16,22 +16,25 @@ def SIConv(parameter):
 
 def fileConv(dataName):
 	for key, value in dataName.items():
-		print(key, value)
 		if(isinstance(value, dict) and (("Value" in value.keys()) and ("Unit" in value.keys()))): 
 			SIConv(value)
 		elif(isinstance(value, dict)):
 			fileConv(value)
 
-def dBConv(parameter):
+def dBtoSI(parameter):
 	parameterIndB = 10**(parameter/10)
 	return parameterIndB
+
+def SItodB(parameter):
+	parameterInSI = 10*np.log10(parameter)
+	return parameterInSI
 
 def calcGain(frequency, typeAnt, diameter, length, efficiency):
 
 	c = 3e8
 
 	if(typeAnt == "unspecified"):
-		gain = dBConv((np.pi**2*diameter**2)/(c/frequency)**2*efficiency)
+		gain = dBtoSI((np.pi**2*diameter**2)/(c/frequency)**2*efficiency)
 	elif(typeAnt == "parabolic"):
 		gain = 20*np.log10(diameter)+20*np.log10(frequency/1e9)+17.8
 	elif(typeAnt == "horn"):
@@ -43,6 +46,7 @@ def calcGain(frequency, typeAnt, diameter, length, efficiency):
 
 def calcPointingLoss(frequency, typeAnt, diameter, length, pointingOffset, halfPowerAngle):
 
+	c = 3e8
 	if(typeAnt == "parabolic"):
 		halfPowerAngle = 21/180*np.pi/(frequency/1e9*diameter)
 	elif(typeAnt == "horn"):
@@ -51,7 +55,6 @@ def calcPointingLoss(frequency, typeAnt, diameter, length, pointingOffset, halfP
 		halfPowerAngle = 52/180*np.pi/(np.pi**2*diameter**2*length/(c/frequency)**3)**(1/2)
 
 	antennaLoss = -12*(pointingOffset/halfPowerAngle)**2
-
 	return antennaLoss
 
 
@@ -84,5 +87,50 @@ def calcSystemNoise(frequency, mode): #values taken from S5 p14
 
 	return totalNoise
 
-# def calcTransPathLoss(frequency):
-	
+def calcTransPathLoss(frequency): #valid for frequencies less than 57GHz and elevation angles greater than 10deg
+	elevationAngle = 45/180*np.pi
+	waterVapourDensity = 1270
+
+	specificAtenuationOxygen = (0.00719+6.09/((frequency/1e9)**2+0.227)+4.81/((frequency/1e9-57)**2+1.5))*(frequency/1e9)**2/(1e3)
+	specificAtenuationWater = (0.067+2.4/((frequency/1e9-22.3)**2+6.6)+7.33/((frequency/1e9-183.5)**2+5))*(frequency/1e9)**2*waterVapourDensity/(1e4)
+
+	totalGaseousAtenuation = -(8*specificAtenuationOxygen+2*specificAtenuationWater)/np.sin(elevationAngle)
+
+	return totalGaseousAtenuation
+
+def calcSpaceLoss(missionType, frequency, orbitingBodyRadius, orbitalHeight, scSunDist, elongationAngle):
+
+	c = 3e8
+
+	if(missionType == "Earth"):
+		worstCaseDistance = ((orbitingBodyRadius+orbitalHeight)**2-orbitingBodyRadius**2)**(1/2)
+	elif(missionType == "Moon"):
+		worstCaseDistance = 384399e3
+	else:
+		earthSunDist = 1.495678e11
+		worstCaseDistance = (earthSunDist**2+scSunDist**2-2*earthSunDist*scSunDist*np.cos(elongationAngle))**(1/2)
+
+	spaceLoss = (c/(4*np.pi*worstCaseDistance*frequency))**2
+	spaceLossindB = SItodB(spaceLoss)
+
+	return spaceLossindB
+
+def calcDataRateLineImager(swathWidth, pixelSize, bitsPerPixel, scGroundVelocity):
+	dataRate = bitsPerPixel*swathWidth*scGroundVelocity/pixelSize**2
+	return dataRate
+
+def calcTransmissionDataRate(payloads, mission):
+
+	totalRequiredDataRate = 0
+
+	for payload in payloads.values():
+		if(payload["GeneratedDataRate"]["Value"] != 0):
+			generatedDataRate = payload["GeneratedDataRate"]["Value"]
+		elif(payload.key == "LineImager"):
+			generatedDataRate = calcDataRateLineImager(payload["SwathWidth"]["Value"], payload["PixelSize"]["Value"], payload["BitsPerPixel"]["Value"], mission["GroundVelocity"]["Value"])
+
+		requiredDataRate = generatedDataRate*payload["DutyCycle"]["Value"]/mission["DownlinkTimeRatio"]["Value"]
+
+		totalRequiredDataRate += requiredDataRate
+
+	return totalRequiredDataRate
