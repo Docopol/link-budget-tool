@@ -1,5 +1,48 @@
 import numpy as np
 
+##Main calculation function
+
+def linkBudget(scData, mode):
+	
+	scPower = SItodB(scData["Spacecraft"]["Power"]["Value"])
+	scTransLoss = SItodB(scData["Spacecraft"]["LossFactor"]["Value"])
+	gsRecLoss = SItodB(scData["GroundStation"]["LossFactor"]["Value"])
+
+	if(mode == "downlink"):
+
+		scGain = calcGain(scData["Mission"]["FrequencyDownlink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["Antenna"]["Efficiency"]["Value"])
+		scPointLoss = calcPointingLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
+		
+		gsGain = calcGain(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
+		gsPointLoss = calcPointingLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
+		
+		systemNoiseTemp = calcSystemNoise(scData["Mission"]["FrequencyDownlink"]["Value"], "downlink")
+		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyDownlink"]["Value"])
+		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], scData["Mission"]["FrequencyDownlink"]["Value"], scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
+
+		transmissionDataRate = calcTransmissionDataRate(scData["Payload"], scData["Mission"])
+
+	elif(mode == "uplink"):
+		scGain = calcGain(scData["Mission"]["FrequencyUplink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["Antenna"]["Efficiency"]["Value"])
+		scPointLoss = calcPointingLoss(scData["Mission"]["FrequencyUplink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
+		
+		gsGain = calcGain(scData["Mission"]["FrequencyUplink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
+		gsPointLoss = calcPointingLoss(scData["Mission"]["FrequencyUplink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
+		
+		systemNoiseTemp = calcSystemNoise(scData["Mission"]["FrequencyUplink"]["Value"], "uplink")
+		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyUplink"]["Value"])
+		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], scData["Mission"]["FrequencyUplink"]["Value"], scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
+
+		transmissionDataRate = scData["Mission"]["RequiredUplinkDataRate"]["Value"]
+
+	snr = scPower + scTransLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + scPointLoss + gsPointLoss + gsRecLoss + 228.6 - 10*np.log10(transmissionDataRate) - 10*np.log10(systemNoiseTemp)
+	# snr = 0
+	return snr	
+
+
+
+## Other functions
+
 #SI unit converter
 
 def SIConv(parameter):
@@ -28,6 +71,8 @@ def dBtoSI(parameter):
 def SItodB(parameter):
 	parameterInSI = 10*np.log10(parameter)
 	return parameterInSI
+
+##Losses/gain functions
 
 def calcGain(frequency, typeAnt, diameter, length, efficiency):
 

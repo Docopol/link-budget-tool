@@ -80,6 +80,10 @@
 			"Value": 0.0833,
 			"Unit": "SI"
 		},
+		"RequiredUplinkDataRate":{
+			"Value": 1e8,
+			"Unit": "SI"
+		},
 		"OrbitingBodyRadius":{
 			"Value": 6371e3,
 			"Unit": "SI"
