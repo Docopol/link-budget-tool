@@ -1,10 +1,12 @@
 import numpy as np
+from tabulate import tabulate
 
 ##Main calculation function
 
 def linkBudget(scData, mode):
 	
 	scPower = SItodB(scData["Spacecraft"]["Power"]["Value"])
+	gsPower = SItodB(scData["GroundStation"]["Power"]["Value"])
 	scTransLoss = SItodB(scData["Spacecraft"]["LossFactor"]["Value"])
 	gsRecLoss = SItodB(scData["GroundStation"]["LossFactor"]["Value"])
 
@@ -16,11 +18,21 @@ def linkBudget(scData, mode):
 		gsGain = calcGain(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
 		gsPointLoss = calcPointingLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
-		systemNoiseTemp = calcSystemNoise(scData["Mission"]["FrequencyDownlink"]["Value"], "downlink")
+		systemNoiseTemp = -SItodB(calcSystemNoise(scData["Mission"]["FrequencyDownlink"]["Value"], "downlink"))
 		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyDownlink"]["Value"])
 		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], scData["Mission"]["FrequencyDownlink"]["Value"], scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
 
-		transmissionDataRate = calcTransmissionDataRate(scData["Payload"], scData["Mission"], scData["PayloadRequirements"])
+		transmissionDataRate = -SItodB(calcTransmissionDataRate(scData["Payload"], scData["Mission"], scData["PayloadRequirements"]))
+
+		snr = scPower + scTransLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + scPointLoss + gsPointLoss + gsRecLoss + 228.6 + transmissionDataRate + systemNoiseTemp
+
+		table = [["Quantity", "Value [dB]"], ["Transmitter Power", scPower], ["Loss Factor Transmitter", scTransLoss], ["Transmitter Antenna Gain", scGain], 
+					["Transmission Path Loss", transmissionPathLoss], ["Receiving Antenna Gain", gsGain], ["Space Loss", freeSpaceLoss], 
+					["Spacecraft Antenna Pointing Loss", scPointLoss], ["Ground Station Antenna Pointing Loss", gsPointLoss], ["Loss Factor Receiver", gsRecLoss], ["Required Data Rate", transmissionDataRate], 
+					["Boltzmann Constant", 228.6], ["System Noise Temperature", systemNoiseTemp], ["Total", snr]]
+
+		print("Downlink budget: \n")
+
 
 	elif(mode == "uplink"):
 
@@ -32,17 +44,28 @@ def linkBudget(scData, mode):
 		gsGain = calcGain(frequencyUpLink, scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
 		gsPointLoss = calcPointingLoss(frequencyUpLink, scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
-		systemNoiseTemp = calcSystemNoise(frequencyUpLink, "uplink")
+		systemNoiseTemp = -SItodB(calcSystemNoise(frequencyUpLink, "uplink"))
 		transmissionPathLoss = calcTransPathLoss(frequencyUpLink)
 		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], frequencyUpLink, scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
 
-		transmissionDataRate = scData["Mission"]["RequiredUplinkDataRate"]["Value"]
+		transmissionDataRate = -SItodB(scData["Mission"]["RequiredUplinkDataRate"]["Value"])
 
-	snr = scPower + scTransLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + scPointLoss + gsPointLoss + gsRecLoss + 228.6 - 10*np.log10(transmissionDataRate) - 10*np.log10(systemNoiseTemp)
-	# snr = 0
+		snr = gsPower + scTransLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + scPointLoss + gsPointLoss + gsRecLoss + 228.6 + transmissionDataRate + systemNoiseTemp	
+	
+		table = [["Quantity", "Value [dB]"], ["Transmitter Power", gsPower], ["Loss Factor Transmitter", gsRecLoss], ["Transmitter Antenna Gain", gsGain], 
+					["Transmission Path Loss", transmissionPathLoss], ["Receiving Antenna Gain", scGain], ["Space Loss", freeSpaceLoss], 
+					["Spacecraft Antenna Pointing Loss", scPointLoss], ["Ground Station Antenna Pointing Loss", gsPointLoss], ["Loss Factor Receiver", scTransLoss], ["Required Data Rate", transmissionDataRate], 
+					["Boltzmann Constant", 228.6], ["System Noise Temperature", systemNoiseTemp], ["Total", snr]]
+
+		print("Uplink budget: \n")
+
+
+	linkBudgetTable(table)
+
 	return snr	
 
-
+def linkBudgetTable(table):
+	print(tabulate(table, headers='firstrow')+"\n")
 
 ## Other functions
 
@@ -185,9 +208,6 @@ def calcTransmissionDataRate(payloads, mission, payloadReq):
 		totalRequiredDataRate += requiredDataRate
 
 	totalRequiredDataRateWithCoding = totalRequiredDataRate/codingRate
-
-	print(totalRequiredDataRateWithCoding)
-	print(maxDataRate)
 
 	if(totalRequiredDataRateWithCoding > maxDataRate):
 		print("The configuration is inconsistent: the required data rate exceeds the channel capacity for the given frequency.")

@@ -136,7 +136,7 @@
 			"Value": 10e-6,
 			"Unit": "SI"
 		},
-		"Coding":"Reed-Solomon",
-		"Modulation": "64-QAM"
+		"Coding":"None",
+		"Modulation": "None"
 	}
 }
