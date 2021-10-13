@@ -20,18 +20,21 @@ def linkBudget(scData, mode):
 		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyDownlink"]["Value"])
 		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], scData["Mission"]["FrequencyDownlink"]["Value"], scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
 
-		transmissionDataRate = calcTransmissionDataRate(scData["Payload"], scData["Mission"])
+		transmissionDataRate = calcTransmissionDataRate(scData["Payload"], scData["Mission"], scData["PayloadRequirements"])
 
 	elif(mode == "uplink"):
-		scGain = calcGain(scData["Mission"]["FrequencyUplink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["Antenna"]["Efficiency"]["Value"])
-		scPointLoss = calcPointingLoss(scData["Mission"]["FrequencyUplink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
+
+		frequencyUpLink = scData["Mission"]["FrequencyDownlink"]["Value"]*scData["Mission"]["TurnAroundRatio"]["ValueUp"]/scData["Mission"]["TurnAroundRatio"]["ValueDown"]
+
+		scGain = calcGain(frequencyUpLink, scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["Antenna"]["Efficiency"]["Value"])
+		scPointLoss = calcPointingLoss(frequencyUpLink, scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
-		gsGain = calcGain(scData["Mission"]["FrequencyUplink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
-		gsPointLoss = calcPointingLoss(scData["Mission"]["FrequencyUplink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
+		gsGain = calcGain(frequencyUpLink, scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
+		gsPointLoss = calcPointingLoss(frequencyUpLink, scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
-		systemNoiseTemp = calcSystemNoise(scData["Mission"]["FrequencyUplink"]["Value"], "uplink")
-		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyUplink"]["Value"])
-		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], scData["Mission"]["FrequencyUplink"]["Value"], scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
+		systemNoiseTemp = calcSystemNoise(frequencyUpLink, "uplink")
+		transmissionPathLoss = calcTransPathLoss(frequencyUpLink)
+		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], frequencyUpLink, scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
 
 		transmissionDataRate = scData["Mission"]["RequiredUplinkDataRate"]["Value"]
 
@@ -164,9 +167,12 @@ def calcDataRateLineImager(swathWidth, pixelSize, bitsPerPixel, scGroundVelocity
 	dataRate = bitsPerPixel*swathWidth*scGroundVelocity/pixelSize**2
 	return dataRate
 
-def calcTransmissionDataRate(payloads, mission):
+def calcTransmissionDataRate(payloads, mission, payloadReq):
 
 	totalRequiredDataRate = 0
+
+	codingRate = calcRequiredNoiseRatio(payloadReq, mission)[1]
+	maxDataRate = calcRequiredNoiseRatio(payloadReq, mission)[2]
 
 	for payload in payloads.values():
 		if(payload["GeneratedDataRate"]["Value"] != 0):
@@ -178,4 +184,76 @@ def calcTransmissionDataRate(payloads, mission):
 
 		totalRequiredDataRate += requiredDataRate
 
-	return totalRequiredDataRate
+	totalRequiredDataRateWithCoding = totalRequiredDataRate/codingRate
+
+	print(totalRequiredDataRateWithCoding)
+	print(maxDataRate)
+
+	if(totalRequiredDataRateWithCoding > maxDataRate):
+		print("The configuration is inconsistent: the required data rate exceeds the channel capacity for the given frequency.")
+
+	return totalRequiredDataRateWithCoding
+
+
+def calcRequiredNoiseRatio(payloadReq, mission): #Assuming a bit error rate of 10-6
+
+	EbN = 10
+	EbGain = 0
+	codingRate = 1
+	bandwidth = mission["FrequencyDownlink"]["Value"]*(1-mission["TurnAroundRatio"]["ValueUp"]/mission["TurnAroundRatio"]["ValueDown"])/4
+
+	if(payloadReq["Modulation"] == "BSK"):
+		EbN = 10.6
+		codingRate *= 1
+	elif(payloadReq["Modulation"] == "QPSK"):
+		EbN = 10.6
+		codingRate *= 2
+	elif(payloadReq["Modulation"] == "4-QAM"):
+		EbN = 10.6
+		codingRate *= 2	
+	elif(payloadReq["Modulation"] == "D-BPSK"):
+		EbN = 11.2
+		codingRate *= 1
+	elif(payloadReq["Modulation"] == "D-QPSK"):
+		EbN = 12.7
+		codingRate *= 2
+	elif(payloadReq["Modulation"] == "8-PSK"):
+		EbN = 14
+		codingRate *= 3
+	elif(payloadReq["Modulation"] == "16-QAM"):
+		EbN = 14.5
+		codingRate *= 4
+	elif(payloadReq["Modulation"] == "16-PSK"):
+		EbN = 18.3
+		codingRate *= 4
+	elif(payloadReq["Modulation"] == "64-QAM"):
+		EbN = 18
+		codingRate *= 6
+	elif(payloadReq["Modulation"] == "32-PSK"):
+		EbN = 23.3
+		codingRate *= 5
+
+	if(payloadReq["Coding"] == "Reed-Solomon"):
+		codingRate *= 0.5
+		EbGain = 4
+	elif(payloadReq["Coding"] == "Convolutional"):
+		codingRate *= 0.5
+		EbGain = 5.5
+	elif(payloadReq["Coding"] == "Convolutional-RS1"):
+		codingRate *= 0.5
+		EbGain = 7.5
+	elif(payloadReq["Coding"] == "Convolutional-RS2"):
+		codingRate *= 1/6
+		EbGain = 9
+	elif(payloadReq["Coding"] == "TurboCode"):
+		codingRate *= 1/6
+		EbGain = 10
+	elif(payloadReq["Coding"] == "LPDC"):
+		codingRate *= 3/4
+		EbGain = 10
+
+	channelCapacity = bandwidth*np.log2(1+EbN)
+
+	EbReq = EbN-EbGain
+
+	return EbReq, codingRate, channelCapacity
