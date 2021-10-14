@@ -20,9 +20,9 @@ def linkBudget(scData, mode):
 		
 		systemNoiseTemp = -SItodB(calcSystemNoise(scData["Mission"]["FrequencyDownlink"]["Value"], "downlink"))
 		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyDownlink"]["Value"])
-		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], scData["Mission"]["FrequencyDownlink"]["Value"], scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
+		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Body"], scData["Mission"]["FrequencyDownlink"]["Value"], scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
 
-		transmissionDataRate = -SItodB(calcTransmissionDataRate(scData["Payload"], scData["Mission"], scData["PayloadRequirements"]))
+		transmissionDataRate = -SItodB(calcTransmissionDataRate(scData["Payload"], scData["Mission"], scData["AdditionnalRequirements"]))
 
 		snr = scPower + scTransLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + scPointLoss + gsPointLoss + gsRecLoss + 228.6 + transmissionDataRate + systemNoiseTemp
 
@@ -46,7 +46,7 @@ def linkBudget(scData, mode):
 		
 		systemNoiseTemp = -SItodB(calcSystemNoise(frequencyUpLink, "uplink"))
 		transmissionPathLoss = calcTransPathLoss(frequencyUpLink)
-		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Planet"], frequencyUpLink, scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
+		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Body"], frequencyUpLink, scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
 
 		transmissionDataRate = -SItodB(scData["Mission"]["RequiredUplinkDataRate"]["Value"])
 
@@ -72,16 +72,17 @@ def linkBudgetTable(table):
 #SI unit converter
 
 def SIConv(parameter):
-	if(parameter["Unit"] == "SI"):
-		return parameter
-	elif(parameter["Unit"] == "deg"):
+	if(parameter["Unit"] == "deg"):
 		parameter["Value"] *= np.pi/180
 		parameter["Unit"] = "SI"
-		return parameter
 	elif(parameter["Unit"] == "dB"):
 		parameter["Value"] = 10**(parameter["Value"]/10)
 		parameter["Unit"] = "SI"
-		return parameter
+	elif(parameter["Unit" == "AU"]):
+		parameter["Value"] *= 149597900000 
+		parameter["Unit"] = "SI"
+
+	return parameter
 
 def fileConv(dataName):
 	for key, value in dataName.items():
@@ -177,7 +178,7 @@ def calcSpaceLoss(missionType, frequency, orbitingBodyRadius, orbitalHeight, scS
 		worstCaseDistance = ((orbitingBodyRadius+orbitalHeight)**2-orbitingBodyRadius**2)**(1/2)
 	elif(missionType == "Moon"):
 		worstCaseDistance = 384399e3
-	else:
+	elif(missionType == "Other"):
 		earthSunDist = 1.495678e11
 		worstCaseDistance = (earthSunDist**2+scSunDist**2-2*earthSunDist*scSunDist*np.cos(elongationAngle))**(1/2)
 

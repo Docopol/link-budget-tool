@@ -67,7 +67,7 @@
 		}		
 	},
 	"Mission":{
-		"Planet":"Earth",
+		"Body":"Earth",
 		"FrequencyDownlink":{
 			"Value": 2.5e9,
 			"Unit": "SI"
@@ -131,7 +131,7 @@
 			}	
 		}	
 	},
-	"PayloadRequirements":{
+	"AdditionnalRequirements":{
 		"RequiredBER":{
 			"Value": 10e-6,
 			"Unit": "SI"
