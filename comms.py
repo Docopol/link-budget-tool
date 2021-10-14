@@ -78,8 +78,11 @@ def SIConv(parameter):
 	elif(parameter["Unit"] == "dB"):
 		parameter["Value"] = 10**(parameter["Value"]/10)
 		parameter["Unit"] = "SI"
-	elif(parameter["Unit" == "AU"]):
+	elif(parameter["Unit"] == "AU"):
 		parameter["Value"] *= 149597900000 
+		parameter["Unit"] = "SI"
+	elif(parameter["Unit"] == "arcmin"):
+		parameter["Value"] *= np.pi/(180*60)  
 		parameter["Unit"] = "SI"
 
 	return parameter
@@ -187,8 +190,9 @@ def calcSpaceLoss(missionType, frequency, orbitingBodyRadius, orbitalHeight, scS
 
 	return spaceLossindB
 
-def calcDataRateLineImager(swathWidth, pixelSize, bitsPerPixel, scGroundVelocity):
-	dataRate = bitsPerPixel*swathWidth*scGroundVelocity/pixelSize**2
+def calcDataRateLineImager(payload, mission):
+	linearPixelSize = mission["OrbitalHeight"]["Value"]*payload["PixelSize"]["Value"]
+	dataRate = payload["BitsPerPixel"]["Value"]*payload["SwathWidth"]["Value"]*mission["GroundVelocity"]["Value"]/linearPixelSize**2
 	return dataRate
 
 def calcTransmissionDataRate(payloads, mission, payloadReq):
@@ -202,7 +206,7 @@ def calcTransmissionDataRate(payloads, mission, payloadReq):
 		if(payload["GeneratedDataRate"]["Value"] != 0):
 			generatedDataRate = payload["GeneratedDataRate"]["Value"]
 		elif(payload.key == "LineImager"):
-			generatedDataRate = calcDataRateLineImager(payload["SwathWidth"]["Value"], payload["PixelSize"]["Value"], payload["BitsPerPixel"]["Value"], mission["GroundVelocity"]["Value"])
+			generatedDataRate = calcDataRateLineImager(payload, mission)
 
 		requiredDataRate = generatedDataRate*payload["DutyCycle"]["Value"]/mission["DownlinkTimeRatio"]["Value"]
 

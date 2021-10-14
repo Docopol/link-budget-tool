@@ -103,7 +103,7 @@
 		},
 		"GroundVelocity":
 		{
-			"Value": 0,
+			"Value": 150,
 			"Unit": "SI"
 		}
 	},
@@ -123,7 +123,7 @@
 			},
 			"PixelSize":{
 				"Value": 0.5,
-				"Unit": "SI"
+				"Unit": "arcmin"
 			},
 			"BitsPerPixel":{
 				"Value": 0.5,
