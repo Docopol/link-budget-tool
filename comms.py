@@ -165,13 +165,14 @@ def calcSystemNoise(frequency, mode): #values taken from S5 p14
 def calcTransPathLoss(frequency): #valid for frequencies less than 57GHz and elevation angles greater than 10deg
 	elevationAngle = 45/180*np.pi
 	waterVapourDensity = 1270
+	heightCharacteristicColumn = 6
 
 	specificAtenuationOxygen = (0.00719+6.09/((frequency/1e9)**2+0.227)+4.81/((frequency/1e9-57)**2+1.5))*(frequency/1e9)**2/(1e3)
 	specificAtenuationWater = (0.067+2.4/((frequency/1e9-22.3)**2+6.6)+7.33/((frequency/1e9-183.5)**2+5))*(frequency/1e9)**2*waterVapourDensity/(1e4)
 
 	totalGaseousAtenuation = -(8*specificAtenuationOxygen+2*specificAtenuationWater)/np.sin(elevationAngle)
 
-	return totalGaseousAtenuation
+	return totalGaseousAtenuation*heightCharacteristicColumn
 
 def calcSpaceLoss(missionType, frequency, orbitingBodyRadius, orbitalHeight, scSunDist, elongationAngle):
 
