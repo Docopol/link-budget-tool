@@ -131,12 +131,17 @@
 			}	
 		}	
 	},
-	"AdditionnalRequirements":{
+	"AdditionnalParameters":{
 		"RequiredBER":{
 			"Value": 10e-6,
 			"Unit": "SI"
 		},
 		"Coding":"None",
-		"Modulation": "None"
+		"Modulation": "None",
+		"PathLoss":{
+			"Value": "unspecified",
+			"Unit": "dB",
+			"ClimaticZone": "A-C"
+		}
 	}
 }

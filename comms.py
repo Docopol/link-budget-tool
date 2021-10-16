@@ -19,10 +19,10 @@ def linkBudget(scData, mode):
 		gsPointLoss = calcPointingLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
 		systemNoiseTemp = -SItodB(calcSystemNoise(scData["Mission"]["FrequencyDownlink"]["Value"], "downlink"))
-		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyDownlink"]["Value"])
+		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["AdditionnalParameters"]["PathLoss"])
 		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Body"], scData["Mission"]["FrequencyDownlink"]["Value"], scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
 
-		transmissionDataRate = -SItodB(calcTransmissionDataRate(scData["Payload"], scData["Mission"], scData["AdditionnalRequirements"]))
+		transmissionDataRate = -SItodB(calcTransmissionDataRate(scData["Payload"], scData["Mission"], scData["AdditionnalParameters"]))
 
 		snr = scPower + scTransLoss + scGain + transmissionPathLoss + gsGain + freeSpaceLoss + scPointLoss + gsPointLoss + gsRecLoss + 228.6 + transmissionDataRate + systemNoiseTemp
 
@@ -45,7 +45,7 @@ def linkBudget(scData, mode):
 		gsPointLoss = calcPointingLoss(frequencyUpLink, scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
 		systemNoiseTemp = -SItodB(calcSystemNoise(frequencyUpLink, "uplink"))
-		transmissionPathLoss = calcTransPathLoss(frequencyUpLink)
+		transmissionPathLoss = calcTransPathLoss(frequencyUpLink, scData["AdditionnalParameters"]["PathLoss"])
 		freeSpaceLoss = calcSpaceLoss(scData["Mission"]["Body"], frequencyUpLink, scData["Mission"]["OrbitingBodyRadius"]["Value"], scData["Mission"]["OrbitalHeight"]["Value"], scData["Mission"]["SpacecraftSunDistance"]["Value"], scData["Mission"]["ElongationAngle"]["Value"])
 
 		transmissionDataRate = -SItodB(scData["Mission"]["RequiredUplinkDataRate"]["Value"])
@@ -162,16 +162,37 @@ def calcSystemNoise(frequency, mode): #values taken from S5 p14
 
 	return totalNoise
 
-def calcTransPathLoss(frequency): #valid for frequencies less than 57GHz and elevation angles greater than 10deg
-	elevationAngle = 45/180*np.pi
+def calcTransPathLoss(frequency, pathLoss): #valid for frequencies less than 57GHz and elevation angles greater than 10deg
+	elevationAngle = 10/180*np.pi
 	waterVapourDensity = 1270
 
-	specificAtenuationOxygen = (0.00719+6.09/((frequency/1e9)**2+0.227)+4.81/((frequency/1e9-57)**2+1.5))*(frequency/1e9)**2/(1e3)
-	specificAtenuationWater = (0.067+2.4/((frequency/1e9-22.3)**2+6.6)+7.33/((frequency/1e9-183.5)**2+5))*(frequency/1e9)**2*waterVapourDensity/(1e4)
+	if(pathLoss["Value"] != 1):
+		totalAttenuation = -pathLoss["Value"]
+		print(pathLoss["Value"])
+	else:
+		climaticZone = pathLoss["ClimaticZone"]
 
-	totalGaseousAtenuation = -(8*specificAtenuationOxygen+2*specificAtenuationWater)/np.sin(elevationAngle)
+		specificAtenuationOxygen = (0.00719+6.09/((frequency/1e9)**2+0.227)+4.81/((frequency/1e9-57)**2+1.5))*(frequency/1e9)**2/(1e3)
+		specificAtenuationWater = (0.067+2.4/((frequency/1e9-22.3)**2+6.6)+7.33/((frequency/1e9-183.5)**2+5))*(frequency/1e9)**2*waterVapourDensity/(1e4)
 
-	return totalGaseousAtenuation
+		totalGaseousAtenuation = -(8*specificAtenuationOxygen+2*specificAtenuationWater)/np.sin(elevationAngle)
+
+		if(climaticZone == "A+"):
+			rainAtenuation = -0.5
+		elif(climaticZone == "A-C"):
+			rainAtenuation = -1.5
+		elif(climaticZone == "D-F"):
+			rainAtenuation = -3
+		elif(climaticZone == "G-K"):
+			rainAtenuation = -4.5
+		elif(climaticZone == "L-M"):
+			rainAtenuation = -6.5
+		elif(climaticZone == "N-P"):
+			rainAtenuation = -9
+
+		totalAttenuation = totalGaseousAtenuation+rainAtenuation
+
+	return totalAttenuation
 
 def calcSpaceLoss(missionType, frequency, orbitingBodyRadius, orbitalHeight, scSunDist, elongationAngle):
 
