@@ -139,7 +139,7 @@
 		"Coding":"None",
 		"Modulation": "None",
 		"PathLoss":{
-			"Value": "unspecified",
+			"Value": 1,
 			"Unit": "dB",
 			"ClimaticZone": "A-C"
 		}
