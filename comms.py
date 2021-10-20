@@ -219,7 +219,8 @@ def calcDataRateLineImager(payload, mission):
 	if(payload["SwathWidth"]["Angular"] == True):
 		linearSwathWidth = 2*mission["OrbitalHeight"]["Value"]*np.tan(linearSwathWidth/2)
 
-	dataRate = payload["BitsPerPixel"]["Value"]*payload["SwathWidth"]["Value"]*mission["GroundVelocity"]["Value"]/linearPixelSize**2
+	dataRate = payload["BitsPerPixel"]["Value"]*linearSwathWidth*mission["GroundVelocity"]["Value"]/linearPixelSize**2
+
 	return dataRate
 
 def calcTransmissionDataRate(payloads, mission, additionnalReq):
