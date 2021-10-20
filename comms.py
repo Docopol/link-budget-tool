@@ -13,10 +13,10 @@ def linkBudget(scData, mode):
 	if(mode == "downlink"):
 
 		scGain = calcGain(scData["Mission"]["FrequencyDownlink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["Antenna"]["Efficiency"]["Value"])
-		scPointLoss = calcPointingLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
+		scPointLoss = calcPointingLossSC(scData["Mission"]["FrequencyDownlink"]["Value"], scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
 		gsGain = calcGain(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
-		gsPointLoss = calcPointingLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
+		gsPointLoss = calcPointingLossGS(scData["Mission"]["FrequencyDownlink"]["Value"], scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
 		systemNoiseTemp = -SItodB(calcSystemNoise(scData["Mission"]["FrequencyDownlink"]["Value"], "downlink"))
 		transmissionPathLoss = calcTransPathLoss(scData["Mission"]["FrequencyDownlink"]["Value"], scData["AdditionnalParameters"]["PathLoss"])
@@ -39,10 +39,10 @@ def linkBudget(scData, mode):
 		frequencyUpLink = scData["Mission"]["FrequencyDownlink"]["Value"]*scData["Mission"]["TurnAroundRatio"]["ValueUp"]/scData["Mission"]["TurnAroundRatio"]["ValueDown"]
 
 		scGain = calcGain(frequencyUpLink, scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["Antenna"]["Efficiency"]["Value"])
-		scPointLoss = calcPointingLoss(frequencyUpLink, scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
+		scPointLoss = calcPointingLossSC(frequencyUpLink, scData["Spacecraft"]["Antenna"]["Type"], scData["Spacecraft"]["Antenna"]["Diameter"]["Value"], scData["Spacecraft"]["Antenna"]["Length"]["Value"], scData["Spacecraft"]["OffsetPointing"]["Value"], scData["Spacecraft"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
 		gsGain = calcGain(frequencyUpLink, scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["Efficiency"]["Value"])
-		gsPointLoss = calcPointingLoss(frequencyUpLink, scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["OffsetPointing"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
+		gsPointLoss = calcPointingLossGS(frequencyUpLink, scData["GroundStation"]["Antenna"]["Type"], scData["GroundStation"]["Antenna"]["Diameter"]["Value"], scData["GroundStation"]["Antenna"]["Length"]["Value"], scData["GroundStation"]["Antenna"]["HalfPowerAngle"]["Value"])
 		
 		systemNoiseTemp = -SItodB(calcSystemNoise(frequencyUpLink, "uplink"))
 		transmissionPathLoss = calcTransPathLoss(frequencyUpLink, scData["AdditionnalParameters"]["PathLoss"])
@@ -119,7 +119,7 @@ def calcGain(frequency, typeAnt, diameter, length, efficiency):
 
 	return gain
 
-def calcPointingLoss(frequency, typeAnt, diameter, length, pointingOffset, halfPowerAngle):
+def calcPointingLossSC(frequency, typeAnt, diameter, length, pointingOffset, halfPowerAngle):
 
 	c = 3e8
 	if(typeAnt == "parabolic"):
@@ -130,6 +130,11 @@ def calcPointingLoss(frequency, typeAnt, diameter, length, pointingOffset, halfP
 		halfPowerAngle = 52/180*np.pi/(np.pi**2*diameter**2*length/(c/frequency)**3)**(1/2)
 
 	antennaLoss = -12*(pointingOffset/halfPowerAngle)**2
+	return antennaLoss
+
+def calcPointingLossGS(frequency, typeAnt, diameter, length, halfPowerAngle):
+
+	antennaLoss = -12*(0.1)**2 #gs antenna point loss is 0.1 of half power angle
 	return antennaLoss
 
 

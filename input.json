@@ -60,11 +60,7 @@
 				"Value": 7,
 				"Unit": "deg"
 			}
-		},
-		"OffsetPointing":{
-			"Value": 0.0014,
-			"Unit": "SI"
-		}		
+		},	
 	},
 	"Mission":{
 		"Body":"Earth",
