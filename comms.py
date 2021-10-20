@@ -168,7 +168,6 @@ def calcTransPathLoss(frequency, pathLoss): #valid for frequencies less than 57G
 
 	if(pathLoss["Value"] != 1):
 		totalAttenuation = -pathLoss["Value"]
-		print(pathLoss["Value"])
 	else:
 		climaticZone = pathLoss["ClimaticZone"]
 
@@ -212,89 +211,107 @@ def calcSpaceLoss(missionType, frequency, orbitingBodyRadius, orbitalHeight, scS
 	return spaceLossindB
 
 def calcDataRateLineImager(payload, mission):
-	linearPixelSize = mission["OrbitalHeight"]["Value"]*payload["PixelSize"]["Value"]
+	linearPixelSize = payload["PixelSize"]["Value"]
+	linearSwathWidth = payload["SwathWidth"]["Value"]
+
+	if(payload["PixelSize"]["Angular"] == True):
+		linearPixelSize = mission["OrbitalHeight"]["Value"]*payload["PixelSize"]["Value"]
+	if(payload["SwathWidth"]["Angular"] == True):
+		linearSwathWidth = 2*mission["OrbitalHeight"]["Value"]*np.tan(linearSwathWidth/2)
+
 	dataRate = payload["BitsPerPixel"]["Value"]*payload["SwathWidth"]["Value"]*mission["GroundVelocity"]["Value"]/linearPixelSize**2
 	return dataRate
 
-def calcTransmissionDataRate(payloads, mission, payloadReq):
+def calcTransmissionDataRate(payloads, mission, additionnalReq):
 
 	totalRequiredDataRate = 0
 
-	codingRate = calcRequiredNoiseRatio(payloadReq, mission)[1]
-	maxDataRate = calcRequiredNoiseRatio(payloadReq, mission)[2]
+	codingRate = calcRequiredNoiseRatio(additionnalReq, mission, "down")[1]
+	maxDataRate = calcRequiredNoiseRatio(additionnalReq, mission, "down")[2]
 
-	for payload in payloads.values():
-		if(payload["GeneratedDataRate"]["Value"] != 0):
-			generatedDataRate = payload["GeneratedDataRate"]["Value"]
-		elif(payload.key == "LineImager"):
-			generatedDataRate = calcDataRateLineImager(payload, mission)
+	for payloadName in payloads:
+		generatedDataRate = 0
 
-		requiredDataRate = generatedDataRate*payload["DutyCycle"]["Value"]/mission["DownlinkTimeRatio"]["Value"]
+		if(payloads[payloadName]["GeneratedDataRate"]["Value"] != 0):
+			generatedDataRate += payloads[payloadName]["GeneratedDataRate"]["Value"]
+		elif(payloadName == "LineImager"):
+			generatedDataRate += calcDataRateLineImager(payloads[payloadName], mission)
+
+		requiredDataRate = generatedDataRate*payloads[payloadName]["DutyCycle"]["Value"]/mission["DownlinkTimeRatio"]["Value"]
 
 		totalRequiredDataRate += requiredDataRate
 
 	totalRequiredDataRateWithCoding = totalRequiredDataRate/codingRate
 
+	print(totalRequiredDataRate)
+
 	if(totalRequiredDataRateWithCoding > maxDataRate):
-		print("The configuration is inconsistent: the required data rate exceeds the channel capacity for the given frequency.")
+		print("The configuration is inconsistent: the required data rate for downlink exceeds the channel capacity for the given frequency.")
 
 	return totalRequiredDataRateWithCoding
 
 
-def calcRequiredNoiseRatio(payloadReq, mission): #Assuming a bit error rate of 10-6
+def calcRequiredNoiseRatio(additionnalReq, mission, mode): #Assuming a bit error rate of 10-6
 
 	EbN = 10
 	EbGain = 0
 	codingRate = 1
 	bandwidth = mission["FrequencyDownlink"]["Value"]*(1-mission["TurnAroundRatio"]["ValueUp"]/mission["TurnAroundRatio"]["ValueDown"])/4
 
-	if(payloadReq["Modulation"] == "BSK"):
+	if(mode == "down"):
+		modulation = additionnalReq["ModulationDown"] 
+		coding = additionnalReq["CodingDown"]
+	elif(mode == "up"):
+		modulation = additionnalReq["ModulationUp"] 
+		coding = additionnalReq["CodingUp"]
+
+	if(modulation== "BSK"):
 		EbN = 10.6
 		codingRate *= 1
-	elif(payloadReq["Modulation"] == "QPSK"):
+	elif(modulation== "QPSK"):
 		EbN = 10.6
 		codingRate *= 2
-	elif(payloadReq["Modulation"] == "4-QAM"):
+	elif(modulation== "4-QAM"):
 		EbN = 10.6
 		codingRate *= 2	
-	elif(payloadReq["Modulation"] == "D-BPSK"):
+	elif(modulation== "D-BPSK"):
 		EbN = 11.2
 		codingRate *= 1
-	elif(payloadReq["Modulation"] == "D-QPSK"):
+	elif(modulation== "D-QPSK"):
 		EbN = 12.7
 		codingRate *= 2
-	elif(payloadReq["Modulation"] == "8-PSK"):
+	elif(modulation== "8-PSK"):
 		EbN = 14
 		codingRate *= 3
-	elif(payloadReq["Modulation"] == "16-QAM"):
+	elif(modulation== "16-QAM"):
 		EbN = 14.5
 		codingRate *= 4
-	elif(payloadReq["Modulation"] == "16-PSK"):
+	elif(modulation== "16-PSK"):
 		EbN = 18.3
 		codingRate *= 4
-	elif(payloadReq["Modulation"] == "64-QAM"):
+	elif(modulation== "64-QAM"):
 		EbN = 18
 		codingRate *= 6
-	elif(payloadReq["Modulation"] == "32-PSK"):
+	elif(modulation== "32-PSK"):
 		EbN = 23.3
 		codingRate *= 5
 
-	if(payloadReq["Coding"] == "Reed-Solomon"):
+	if(coding == "Reed-Solomon"):
 		codingRate *= 0.5
 		EbGain = 4
-	elif(payloadReq["Coding"] == "Convolutional"):
+	elif(coding == "Convolutional"):
 		codingRate *= 0.5
 		EbGain = 5.5
-	elif(payloadReq["Coding"] == "Convolutional-RS1"):
+	elif(coding == "Convolutional-RS1"):
 		codingRate *= 0.5
 		EbGain = 7.5
-	elif(payloadReq["Coding"] == "Convolutional-RS2"):
+	elif(coding == "Convolutional-RS2"):
 		codingRate *= 1/6
 		EbGain = 9
-	elif(payloadReq["Coding"] == "TurboCode"):
+	elif(coding == "TurboCode"):
 		codingRate *= 1/6
 		EbGain = 10
-	elif(payloadReq["Coding"] == "LPDC"):
+	elif(coding == "LPDC"):
 		codingRate *= 3/4
 		EbGain = 10
 

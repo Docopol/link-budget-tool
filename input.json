@@ -1,7 +1,7 @@
 {
 	"Spacecraft":{
 		"Power":{
-			"Value": 2,
+			"Value": 150,
 			"Unit": "SI"
 		},
 		"LossFactor":{
@@ -11,7 +11,7 @@
 		"Antenna":{
 			"Type": "parabolic",
 			"Diameter":{
-				"Value": 0.5,
+				"Value": 1,
 				"Unit": "SI"
 			},
 			"Length":{
@@ -34,18 +34,18 @@
 	},
 	"GroundStation":{
 		"Power":{
-			"Value": 2,
+			"Value": 400,
 			"Unit": "SI"
 		},
 		"LossFactor":{
-			"Value": 0.8,
+			"Value": 0.7,
 			"Unit": "SI"
 		},
 
 		"Antenna":{
 			"Type": "parabolic",
 			"Diameter":{
-				"Value": 10,
+				"Value": 15,
 				"Unit": "SI"
 			},
 			"Length":{
@@ -69,7 +69,7 @@
 	"Mission":{
 		"Body":"Earth",
 		"FrequencyDownlink":{
-			"Value": 2.5e9,
+			"Value": 2.2e9,
 			"Unit": "SI"
 		},
 		"TurnAroundRatio":{
@@ -78,7 +78,7 @@
 			"Unit": "SI"
 		},
 		"DownlinkTimeRatio":{
-			"Value": 0.0833,
+			"Value": 0.020833,
 			"Unit": "SI"
 		},
 		"RequiredUplinkDataRate":{
@@ -90,7 +90,7 @@
 			"Unit": "SI"
 		},
 		"OrbitalHeight":{
-			"Value": 570e3,
+			"Value": 820e3,
 			"Unit": "SI"
 		},
 		"SpacecraftSunDistance":{
@@ -103,30 +103,32 @@
 		},
 		"GroundVelocity":
 		{
-			"Value": 150,
+			"Value": 6.209e3,
 			"Unit": "SI"
 		}
 	},
 	"Payload":{
 		"LineImager":{
 			"GeneratedDataRate":{
-				"Value": 1e6,
+				"Value": 0,
 				"Unit": "SI"
 			},
 			"DutyCycle":{
-				"Value": 0.5,
+				"Value": 1,
 				"Unit": "SI"
 			},
 			"SwathWidth":{
-				"Value": 0.5,
-				"Unit": "SI"
+				"Value": 45,
+				"Unit": "deg",
+				"Angular": true
 			},
 			"PixelSize":{
-				"Value": 0.5,
-				"Unit": "arcmin"
+				"Value": 0.01,
+				"Unit": "arcmin",
+				"Angular": true
 			},
 			"BitsPerPixel":{
-				"Value": 0.5,
+				"Value": 32,
 				"Unit": "SI"
 			}	
 		}	
@@ -136,8 +138,10 @@
 			"Value": 10e-6,
 			"Unit": "SI"
 		},
-		"Coding":"None",
-		"Modulation": "None",
+		"CodingDown":"None",
+		"ModulationDown": "BSK",
+		"CodingUp":"None",
+		"ModulationUp": "BSK",
 		"PathLoss":{
 			"Value": 1,
 			"Unit": "dB",
