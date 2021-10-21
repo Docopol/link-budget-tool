@@ -168,10 +168,10 @@ def calcSystemNoise(frequency, mode): #values taken from S5 p14
 	return totalNoise
 
 def calcTransPathLoss(frequency, pathLoss): #valid for frequencies less than 57GHz and elevation angles greater than 10deg
-	elevationAngle = 10/180*np.pi
+	elevationAngle = 80/180*np.pi
 	waterVapourDensity = 1270
 
-	if(pathLoss["Value"] != 1):
+	if(pathLoss["Calculation"] == False):
 		totalAttenuation = -pathLoss["Value"]
 	else:
 		climaticZone = pathLoss["ClimaticZone"]
@@ -195,7 +195,7 @@ def calcTransPathLoss(frequency, pathLoss): #valid for frequencies less than 57G
 			rainAtenuation = -9
 
 		totalAttenuation = totalGaseousAtenuation+rainAtenuation
-
+		print(totalGaseousAtenuation)
 	return totalAttenuation
 
 def calcSpaceLoss(missionType, frequency, orbitingBodyRadius, orbitalHeight, scSunDist, elongationAngle):
@@ -248,8 +248,6 @@ def calcTransmissionDataRate(payloads, mission, additionnalReq):
 		totalRequiredDataRate += requiredDataRate
 
 	totalRequiredDataRateWithCoding = totalRequiredDataRate/codingRate
-
-	print(totalRequiredDataRate)
 
 	if(totalRequiredDataRateWithCoding > maxDataRate):
 		print("The configuration is inconsistent: the required data rate for downlink exceeds the channel capacity for the given frequency.")

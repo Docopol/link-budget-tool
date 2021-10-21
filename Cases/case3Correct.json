@@ -1,7 +1,7 @@
 {
 	"Spacecraft":{
 		"Power":{
-			"Value": 150,
+			"Value": 10,
 			"Unit": "SI"
 		},
 		"LossFactor":{
@@ -11,7 +11,7 @@
 		"Antenna":{
 			"Type": "parabolic",
 			"Diameter":{
-				"Value": 1,
+				"Value": 0.5,
 				"Unit": "SI"
 			},
 			"Length":{
@@ -28,7 +28,7 @@
 			}
 		},
 		"OffsetPointing":{
-			"Value": 0.25,
+			"Value": 1,
 			"Unit": "deg"
 		}	
 	},
@@ -45,7 +45,7 @@
 		"Antenna":{
 			"Type": "parabolic",
 			"Diameter":{
-				"Value": 15,
+				"Value": 35,
 				"Unit": "SI"
 			},
 			"Length":{
@@ -63,43 +63,42 @@
 		}	
 	},
 	"Mission":{
-		"Body":"Earth",
+		"Body":"Other",
 		"FrequencyDownlink":{
-			"Value": 2.2e9,
+			"Value": 8.4e9,
 			"Unit": "SI"
 		},
 		"TurnAroundRatio":{
-			"ValueUp": 221,
-			"ValueDown": 240,
+			"ValueUp": 749,
+			"ValueDown": 880,
 			"Unit": "SI"
 		},
 		"DownlinkTimeRatio":{
-			"Value": 0.020833,
+			"Value": 0.75,
 			"Unit": "SI"
 		},
 		"RequiredUplinkDataRate":{
-			"Value": 1e8,
+			"Value": 1e4,
 			"Unit": "SI"
 		},
 		"OrbitingBodyRadius":{
-			"Value": 6371e3,
+			"Value": 3389.5e3,
 			"Unit": "SI"
 		},
 		"OrbitalHeight":{
-			"Value": 820e3,
+			"Value": 1000e3,
 			"Unit": "SI"
 		},
 		"SpacecraftSunDistance":{
-			"Value": 0,
-			"Unit": "SI"
+			"Value": 1.524,
+			"Unit": "AU"
 		},
 		"ElongationAngle":{
-			"Value": 0,
+			"Value": 5,
 			"Unit": "deg"
 		},
-		"GroundVelocity":
-		{
-			"Value": 6.209e3,
+		"GroundVelocity":{
+			"Value": 2000,
 			"Unit": "SI"
 		}
 	},
@@ -110,21 +109,21 @@
 				"Unit": "SI"
 			},
 			"DutyCycle":{
-				"Value": 1,
+				"Value": 0.01,
 				"Unit": "SI"
 			},
 			"SwathWidth":{
-				"Value": 45,
+				"Value": 6.8,
 				"Unit": "deg",
 				"Angular": true
 			},
 			"PixelSize":{
-				"Value": 0.01,
+				"Value": 0.2,
 				"Unit": "arcmin",
 				"Angular": true
 			},
 			"BitsPerPixel":{
-				"Value": 32,
+				"Value": 8,
 				"Unit": "SI"
 			}	
 		}	
@@ -134,15 +133,15 @@
 			"Value": 10e-6,
 			"Unit": "SI"
 		},
-		"CodingDown":"None",
-		"ModulationDown": "BSK",
-		"CodingUp":"None",
-		"ModulationUp": "BSK",
+		"CodingDown":"LPDC",
+		"ModulationDown": "QPSK",
+		"CodingUp":"Convolutional-RS1",
+		"ModulationUp": "QPSK",
 		"PathLoss":{
 			"Value": 1,
 			"Unit": "dB",
-			"ClimaticZone": "A-C",
-			"Calculation" : false
+			"ClimaticZone": "A+",
+			"Calculation" : true
 		}
 	}
 }
